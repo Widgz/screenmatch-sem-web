@@ -27,7 +27,8 @@ public class Serie {
     private String poster;
     private String sinopse;
     //@Transient: determina que o atributo não deve ser persistido
-    @Transient
+    //@OneToMany: uma serie para muitos episodios
+    @OneToMany(mappedBy = "serie", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Episodio> episodios = new ArrayList<>();
 
     public List<Episodio> getEpisodios() {
@@ -35,6 +36,7 @@ public class Serie {
     }
 
     public void setEpisodios(List<Episodio> episodios) {
+        episodios.forEach(e -> e.setSerie(this));
         this.episodios = episodios;
     }
 
@@ -111,7 +113,8 @@ public class Serie {
                         ", avaliacao=" + avaliacao +
                         ", atores='" + atores + '\'' +
                         ", poster='" + poster + '\'' +
-                        ", sinopse='" + sinopse + '\'';
+                        ", sinopse='" + sinopse + '\'' +
+                        ", episodios='" + episodios + '\'';
     }
 
     //JPA exige que se tenha um construtor padrao
