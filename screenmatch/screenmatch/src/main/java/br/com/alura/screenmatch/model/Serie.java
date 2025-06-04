@@ -7,17 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalDouble;
 
-//Aloca essa classe como uma tabela no banco de dados
 @Entity
-@Table(name = "series") //altera o nome da tabela pra series
+@Table(name = "series")
 public class Serie {
     @Id
-    //tipo de geração do Id (identificador unico)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    //indica que a coluna título deve ter valores únicos, ou seja, nao se repete
-    @Column(unique = true)
     private String titulo;
     private Integer totalTemporadas;
     private Double avaliacao;
@@ -26,18 +21,20 @@ public class Serie {
     private String atores;
     private String poster;
     private String sinopse;
-    //@Transient: determina que o atributo não deve ser persistido
-    //@OneToMany: uma serie para muitos episodios
+
     @OneToMany(mappedBy = "serie", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Episodio> episodios = new ArrayList<>();
 
-    public List<Episodio> getEpisodios() {
-        return episodios;
-    }
+    public Serie() {}
 
-    public void setEpisodios(List<Episodio> episodios) {
-        episodios.forEach(e -> e.setSerie(this));
-        this.episodios = episodios;
+    public Serie(DadosSerie dadosSerie){
+        this.titulo = dadosSerie.titulo();
+        this.totalTemporadas = dadosSerie.totalTemporadas();
+        this.avaliacao = OptionalDouble.of(Double.valueOf(dadosSerie.avaliacao())).orElse(0);
+        this.genero = Categoria.fromString(dadosSerie.genero().split(",")[0].trim());
+        this.atores = dadosSerie.atores();
+        this.poster = dadosSerie.poster();
+        this.sinopse = ConsultaMyMemory.obterTraducao(dadosSerie.sinopse()).trim();
     }
 
     public Long getId() {
@@ -46,6 +43,15 @@ public class Serie {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public List<Episodio> getEpisodios() {
+        return episodios;
+    }
+
+    public void setEpisodios(List<Episodio> episodios) {
+        episodios.forEach(e -> e.setSerie(this));
+        this.episodios = episodios;
     }
 
     public String getTitulo() {
@@ -115,22 +121,5 @@ public class Serie {
                         ", poster='" + poster + '\'' +
                         ", sinopse='" + sinopse + '\'' +
                         ", episodios='" + episodios + '\'';
-    }
-
-    //JPA exige que se tenha um construtor padrao
-    public Serie(){}
-
-    public Serie(DadosSerie dadosSerie) {
-        this.titulo = dadosSerie.titulo();
-        this.totalTemporadas = dadosSerie.totalTemporadas();
-        //tenta ler o valor da avaliacao, se nao conseguir, designa como 0
-        this.avaliacao = OptionalDouble.of(Double.valueOf(dadosSerie.avaliacao())).orElse(0);
-        //o Json vem com várias categorias separadas por virgula, o código abaixo separa o texto com virgula
-        //pegando a primeira palavra [0], removendo espaços em branco e quebra de linha por meio do trim
-        this.genero = Categoria.fromString(dadosSerie.genero().split(",")[0].trim());
-        this.atores = dadosSerie.atores();
-        this.poster = dadosSerie.poster();
-        this.sinopse = ConsultaMyMemory.obterTraducao(dadosSerie.sinopse()).trim();
-
     }
 }
